@@ -83,8 +83,8 @@ func respond(theme: Theme) {
                 "-i",
                 // Don't create a backfup file
                 "''",
-                "s/catppuccin-[a-z]*/catppuccin-\(themeToCatppuccinTheme(theme: theme))/g",
-                "~/.config/nvim/lua/user/ui/theme.lua",
+                "\"s/vim.opt.background = \\\"[a-z]*\\\"/vim.opt.background = \\\"\(themeToStringTheme(theme: theme))\\\"/g\"",
+                "~/.config/nvim/lua/plugins/color.lua"
             ]
 
             do {
@@ -104,6 +104,21 @@ func respond(theme: Theme) {
                 try shellOut(to: "kitty", arguments: arguments)
             } catch {
                 print("\(Date()) kitty: command failed")
+            }
+        }
+
+        // Tmux -----------------------------------------------------------------
+        DispatchQueue.global().async {
+            print("\(Date()) tmux: sending command")
+
+            let arguments1 = ["set", "-g", "@catppuccin_flavour", themeToCatppuccinTheme(theme: theme)]
+            let arguments2 = ["run-shell", "~/.tmux/plugins/tpm/tpm"]
+
+            do {
+                try shellOut(to: "tmux", arguments: arguments1)
+                try shellOut(to: "tmux", arguments: arguments2)
+            } catch {
+                print("\(Date()) tmux: command failed")
             }
         }
 
@@ -161,7 +176,8 @@ func respond(theme: Theme) {
 }
 
 func buildNvimBackgroundArguments(server: String, theme: Theme) -> [String] {
-    return ["--servername", server, "+'colorscheme catppuccin-\(themeToCatppuccinTheme(theme: theme))'"]
+//    return ["--servername", server, "+'colorscheme catppuccin-\(themeToCatppuccinTheme(theme: theme))'"]
+    return ["--servername", server, "+'set background=\(themeToStringTheme(theme: theme))'"]
 }
 
 func buildKittyArguments(theme: Theme) -> [String] {
@@ -196,6 +212,17 @@ func themeToCatppuccinTheme(theme: Theme) -> String {
             return "latte"
         case .dark:
             return "mocha"
+        }
+    }()
+}
+
+func themeToStringTheme(theme: Theme) -> String {
+    return {
+        switch theme {
+        case .light:
+            return "light"
+        case .dark:
+            return "dark"
         }
     }()
 }
